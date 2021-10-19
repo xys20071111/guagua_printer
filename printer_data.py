@@ -15,7 +15,9 @@ class PrinterData:
                 data.append(bytes([0]))
             data_array.append(data)
         self.data_array = data_array
-
+    def newline(self):
+        self.__x += 23
+        self.__y = 0
     def clean_canvas(self):
         data_array = []
         for i in range(0, self.__height):
@@ -30,8 +32,6 @@ class PrinterData:
             raise utils.TooManyCharException
         char = char_dict.char[ch]
         char_shape = utils.get_shape(char)
-        if x + char_shape[0] > 48 or y + char_shape[1] > self.__height:
-            raise utils.TooLongException
         if x < 4:
             raise utils.ReserveLineException
         char = char_dict.char[ch]
@@ -44,13 +44,12 @@ class PrinterData:
             char = char_dict.char[text[i]]
             char_shape = utils.get_shape(char)
             if(char_shape[0] + self.__y > 48):
-                self.__x += 20
+                self.__x += 23
                 self.__y = 0
                 if self.__x > self.__height:
                     raise utils.TooLongException
             self.draw(text[i],self.__x,self.__y)
             self.__y += char_shape[0]
-            print(self.__y)
 
     def get_printer_acceptable_data(self):
         buffer = [
@@ -77,11 +76,3 @@ class PrinterData:
         buffer.append(b'\xaa\xaa\x01\x01UU')
         return bytes().join(buffer)
 
-
-if __name__ == '__main__':
-    import serial
-    rfcomm = serial.Serial('/dev/rfcomm0', baudrate=115200)
-    data = PrinterData()
-    data.draw_str('abcdefghijklmnopqrstuvwxyz')
-    print('data ok')
-    rfcomm.write(data.get_printer_acceptable_data())

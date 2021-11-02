@@ -5,8 +5,6 @@ class PrinterData:
     __x = 4
     __y = 0
     def __init__(self, height=255) -> None:
-        if height > 255:
-            raise utils.TooHighException
         self.__height = height
         data_array = []
         for i in range(0, height):
@@ -52,6 +50,7 @@ class PrinterData:
             self.__y += char_shape[0]
 
     def get_printer_acceptable_data(self):
+        count = 0
         buffer = [
             b'\xaa\xaa\x01\x01UU',
             b'\xaa\xaa\x01\xacUU',
@@ -63,8 +62,11 @@ class PrinterData:
         for i in range(0, self.__height):
             line = bytes()
             line += b'\xaa\xaa4\x03'
-            line += bytes([i])
-            line += b'\x00\x01'
+            if(i == 256) and (i != 0):
+                count += 1
+            line += bytes([i % 256])
+            line += bytes([count])
+            line += b'\x01'
             for v in self.data_array[i]:
                 if type(v) == int:
                     line += bytes([v])

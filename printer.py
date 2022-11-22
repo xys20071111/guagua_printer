@@ -23,3 +23,4 @@ class Printer(threading.Thread):
                 data = self.__rfcomm.read_until(b'UU')
                 if data == self.__print_end:
                     break
+            break

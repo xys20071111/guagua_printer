@@ -78,3 +78,17 @@ class PrinterData:
         buffer.append(b'\xaa\xaa\x01\x01UU')
         return bytes().join(buffer)
 
+    def fromString(text):
+        __x = 4
+        __y = 0
+        for i in range(0, len(text)):
+            char = char_dict.char[text[i]]
+            char_shape = utils.get_shape(char)
+            if(char_shape[0] + __y > 48):
+                __x += 23
+                __y = 0
+            __y += char_shape[0]
+        __x += 23
+        result = PrinterData(__x)
+        result.draw_str(text)
+        return result

@@ -17,4 +17,4 @@ class ReserveLineException(Exception):
 
 class TooManyCharException(Exception):
     def __str__(self) -> str:
-        return "draw function can only accept a character onec a time."
+        return "draw function can only accept a character one at a time."

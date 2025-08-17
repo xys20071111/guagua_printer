@@ -1,5 +1,4 @@
 from serial import Serial
-from queue import Queue
 from printer_data import PrinterData
 
 # This byte sequence is sent by the printer to indicate the end of a print job.
@@ -13,26 +12,12 @@ class Printer:
 
     def __init__(self, port: str) -> None:
         self._rfcomm = Serial(port)
-        self._mission_queue = Queue()
 
-    def add_mission(self, data: PrinterData):
-        """Adds a new print job to the queue."""
-        # The data is converted to the printer's format when being added to the queue.
-        self._mission_queue.put(data.get_printer_acceptable_data())
-
-    def run(self) -> None:
+    def run(self, mission: PrinterData) -> None:
         """
         Starts processing the print queue.
         This method will run until the queue is empty.
         """
-        while not self._mission_queue.empty():
-            mission_data = self._mission_queue.get()
-            for buf in mission_data:
-                self._rfcomm.write(buf)
-
-            # Wait for the printer to send the 'end of print' response
-            # before sending the next job.
-            while True:
-                response = self._rfcomm.read_until(b'UU')
-                if response == PRINT_END_RESPONSE:
-                    break
+        mission_data = mission.get_printer_acceptable_data()
+        for buf in mission_data:
+            self._rfcomm.write(buf)

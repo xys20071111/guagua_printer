@@ -13,7 +13,7 @@ def main():
 
     image_path = sys.argv[1]
     serial_port = sys.argv[2]
-    
+
     print(f"Processing image: {image_path}")
     try:
         printer_data = PrinterData.from_image(image_path, dithering=True)
@@ -25,11 +25,10 @@ def main():
         sys.exit(1)
 
     print(f"Sending image to printer on port: {serial_port}")
-    
+
     try:
         printer = Printer(serial_port)
-        printer.add_mission(printer_data)
-        printer.run()
+        printer.run(printer_data)
         print("Image sent successfully!")
     except Exception as e:
         print(f"An error occurred while sending data to the printer: {e}")

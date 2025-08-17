@@ -97,7 +97,6 @@ class PrinterData:
                 line.extend(bytes(v))
 
             line.extend(b'UU')
-            print(len(line)-5)
             buffer.append(bytes(line))
 
         # Printer command suffix/footer

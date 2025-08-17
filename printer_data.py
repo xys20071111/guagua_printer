@@ -1,6 +1,7 @@
 import utils
-from char import CHAR_BITMAPS
 import cv2
+from typing import List
+from char import CHAR_BITMAPS
 from process_image_to_packets import process_image_to_packets
 
 
@@ -61,7 +62,7 @@ class PrinterData:
             self._cursor_y += char_shape[0]
 
 
-    def get_printer_acceptable_data(self) -> bytes:
+    def get_printer_acceptable_data(self) -> List[bytes]:
         """
         Assembles the complete data payload with headers, canvas data, and footers
         in a format the printer can understand.
@@ -82,20 +83,21 @@ class PrinterData:
 
         for i in range(self._height):
             line = bytearray()
-            line.extend(b'\xaa\xaa4\x03')
+            line.extend(b'\xaa\xaa\x34\x03')
 
             # Handle data chunking for heights > 255
-            if i == 256: # Note: original code had `and (i != 0)` which is redundant
-                count += 1
+            # if i == 256: # Note: original code had `and (i != 0)` which is redundant
+            #     count += 1
 
-            line.append(i % 256)
-            line.append(count)
+            line.append(i & 0xFF)
+            line.append((i >> 8) & 0xFF)
             line.append(1)
 
             for v in self.data_array[i]:
                 line.extend(bytes(v))
 
             line.extend(b'UU')
+            print(len(line)-5)
             buffer.append(bytes(line))
 
         # Printer command suffix/footer
@@ -105,7 +107,7 @@ class PrinterData:
         ]
         buffer.extend(footer)
 
-        return b''.join(buffer)
+        return buffer
 
     @staticmethod
     def from_string(text: str):
@@ -161,12 +163,12 @@ class PrinterData:
             aspect_ratio = height / width
             new_height = int(384 * aspect_ratio)
             image = cv2.resize(image, (384, new_height))
-        
+
         packets = process_image_to_packets(image, dithering=dithering)
 
         # The height of the printer data should match the number of packets.
         printer_data = PrinterData(height=len(packets))
-        
+
         new_data_array = []
         for packet in packets:
             # Each packet is a bytes object of length 48.
@@ -175,5 +177,5 @@ class PrinterData:
             new_data_array.append(row)
 
         printer_data.data_array = new_data_array
-        
+
         return printer_data

@@ -4,7 +4,7 @@ from typing import List
 
 def process_image_to_packets(
     image: np.ndarray,
-    padding_height: int = 0,
+    padding_height: int = 32,
     dithering: bool = True
 ) -> List[bytes]:
     """
@@ -84,7 +84,7 @@ def process_image_to_packets(
         # byte[1] = 行号低8位
         # byte[2] = 行号高8位
         # byte[3] = 包内有效行数 (这里简化为1，即每行一个包)
-        header = [3, y & 0xFF, (y >> 8) & 0xFF, 1]
+        # header = [3, y & 0xFF, (y >> 8) & 0xFF, 1]
 
         # 组合包头和数据，并添加到结果列表
         packet = bytes(row_bytes_data)

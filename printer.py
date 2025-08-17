@@ -27,7 +27,8 @@ class Printer:
         """
         while not self._mission_queue.empty():
             mission_data = self._mission_queue.get()
-            self._rfcomm.write(mission_data)
+            for buf in mission_data:
+                self._rfcomm.write(buf)
 
             # Wait for the printer to send the 'end of print' response
             # before sending the next job.
@@ -35,4 +36,3 @@ class Printer:
                 response = self._rfcomm.read_until(b'UU')
                 if response == PRINT_END_RESPONSE:
                     break
-        

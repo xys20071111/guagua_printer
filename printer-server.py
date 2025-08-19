@@ -9,9 +9,7 @@ from process_image_to_packets import process_image_to_packets
 # --- 配置 ---
 # !!! 重要 !!!
 # 在运行前，请将此处的串口地址修改为您的打印机所连接的实际地址。
-# 在 Linux 上通常是 /dev/ttyUSB0 或 /dev/ttyACM0
-# 在 macOS 上可能是 /dev/cu.usbserial-XXXX
-# 在 Windows 上是 COMx (例如 "COM3")
+# 在 Linux 上通常是 /dev/rfcomm0
 SERIAL_PORT = "/dev/rfcomm0"
 
 # --- FastAPI 应用实例 ---

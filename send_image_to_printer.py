@@ -8,7 +8,7 @@ def main():
     """
     if len(sys.argv) < 3:
         print("Usage: python send_image_to_printer.py <image_path> <serial_port>")
-        print("Example: python send_image_to_printer.py my_image.png /dev/ttyUSB0")
+        print("Example: python send_image_to_printer.py my_image.png /dev/rfcomm0")
         sys.exit(1)
 
     image_path = sys.argv[1]

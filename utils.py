@@ -3,10 +3,6 @@ def get_shape(d: tuple):
     width = len(d[0])
     return (width, height)
 
-class TooHighException(Exception):
-    def __str__(self) -> str:
-        return "Height cannot bigger than 255."
-
 class TooLongException(Exception):
     def __str__(self) -> str:
         return "Text longer than max height or width."

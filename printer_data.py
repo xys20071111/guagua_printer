@@ -84,11 +84,6 @@ class PrinterData:
         for i in range(self._height):
             line = bytearray()
             line.extend(b'\xaa\xaa\x34\x03')
-
-            # Handle data chunking for heights > 255
-            # if i == 256: # Note: original code had `and (i != 0)` which is redundant
-            #     count += 1
-
             line.append(i & 0xFF)
             line.append((i >> 8) & 0xFF)
             line.append(1)

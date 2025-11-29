@@ -3,6 +3,35 @@ import cv2
 from typing import List
 from char import CHAR_BITMAPS
 from process_image_to_packets import process_image_to_packets
+from PIL import Image, ImageDraw, ImageFont
+import tempfile
+import os
+
+
+def _wrap_text_force_break(text, font, max_width):
+    draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+    lines = []
+    
+    current_line = ""
+    for char in text:
+        try:
+            # Pillow >= 10.0.0
+            bbox = draw.textbbox((0, 0), current_line + char, font=font)
+            next_line_width = bbox[2] - bbox[0]
+        except AttributeError:
+            # Older Pillow
+            next_line_width, _ = draw.textsize(current_line + char, font=font)
+        
+        if next_line_width > max_width:
+            lines.append(current_line)
+            current_line = char
+        else:
+            current_line += char
+            
+    if current_line:
+        lines.append(current_line)
+        
+    return lines
 
 
 class PrinterData:
@@ -104,33 +133,75 @@ class PrinterData:
         return buffer
 
     @staticmethod
-    def from_string(text: str):
+    def from_string(text: str, debug_output = False):
         """
-        Calculates the required canvas height for a given string and returns
-        a PrinterData instance with the string already drawn on it.
+        Generates an image containing the given string and processes it.
         """
-        cursor_x = 4
-        cursor_y = 0
+        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+        font_size = 24
+        try:
+            font = ImageFont.truetype(font_path, font_size)
+        except IOError:
+            font = ImageFont.load_default()
 
-        # Calculate required height
-        for char_to_measure in text:
-            if char_to_measure == '\n':
-                cursor_x += 23
-                cursor_y = 0
-                continue
-            char_data = CHAR_BITMAPS[char_to_measure]
-            char_shape = utils.get_shape(char_data)
-            if char_shape[0] + cursor_y > 48:
-                cursor_x += 23
-                cursor_y = 0
-            cursor_y += char_shape[0]
+        # Wrap text to fit printer width (384px)
+        text = text.replace('\n', ' ')
+        wrapped_text = _wrap_text_force_break(text, font, 384)
+        
+        # Calculate image dimensions
+        draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+        max_line_width = 0
+        total_height = 0
+        line_spacing = 5
 
-        # Add final padding
-        final_height = cursor_x + 23
+        for line in wrapped_text:
+            try:
+                # Pillow >= 10.0.0
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_width = bbox[2] - bbox[0]
+                line_height = bbox[3] - bbox[1]
+            except AttributeError:
+                # Older Pillow
+                line_width, line_height = draw.textsize(line, font=font)
+            
+            if line_width > max_line_width:
+                max_line_width = line_width
+            total_height += line_height + line_spacing
+            
+        img_width = max_line_width + 20 # Add padding
+        img_height = total_height + 10 # Add padding
 
-        result = PrinterData(final_height)
-        result.draw_str(text)
-        return result
+        img = Image.new('L', (img_width, img_height), color='white')
+        draw = ImageDraw.Draw(img)
+
+        y_text = 5 #
+        for line in wrapped_text:
+            try:
+                # Pillow >= 10.0.0
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_height = bbox[3] - bbox[1]
+            except AttributeError:
+                # Older Pillow
+                _, line_height = draw.textsize(line, font=font)
+
+            draw.text((10, y_text), line, font=font, fill='black')
+            y_text += line_height + line_spacing
+
+
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        img.save(temp_file.name)
+        if debug_output:
+            img.save("debug_output.png")
+
+        # from_image expects a path, so we close the file and pass the name
+        temp_file.close()
+
+        try:
+            printer_data = PrinterData.from_image(temp_file.name)
+        finally:
+            os.unlink(temp_file.name)
+
+        return printer_data
 
     @staticmethod
     def from_image(image_path: str, dithering: bool = True):

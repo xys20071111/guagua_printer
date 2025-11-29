@@ -13,11 +13,15 @@ class Printer:
     def __init__(self, port: str) -> None:
         self._rfcomm = Serial(port)
 
-    def run(self, mission: PrinterData) -> None:
+    def run(self, mission: PrinterData, dry_run=False) -> None:
         """
         Starts processing the print queue.
         This method will run until the queue is empty.
         """
+        if dry_run:
+            print("Dry run mode: Skipping actual printing.")
+            return
+
         mission_data = mission.get_printer_acceptable_data()
         for buf in mission_data:
             self._rfcomm.write(buf)
